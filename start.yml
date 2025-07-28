@@ -1,0 +1,19 @@
+- hosts: cloud
+  become: true
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install some packages
+      apt:
+        name:
+          - git
+          - htop
+        state: present
+
+    - name: Make sure SSH is running
+      service:
+        name: ssh
+        state: started
+
