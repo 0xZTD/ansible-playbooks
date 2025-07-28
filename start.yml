@@ -10,10 +10,54 @@
         name:
           - git
           - htop
+          - ufw
+          - python-is-python3
+          - xvfb
         state: present
 
     - name: Make sure SSH is running
       service:
         name: ssh
         state: started
+    
+    - name: Make sure ufw enabled
+      service:
+        name: ufw
+        state: started
 
+    - name: Allow SSH through UFW (port 22)
+      ufw:
+        rule: allow
+        name: OpenSSH
+
+    - name: Enable UFW
+      ufw:
+        state: enabled
+
+    - name: Check UFW status
+      command: ufw status verbose
+      register: ufw_status
+
+    - name: Display UFW status
+      debug:
+        var: ufw_status.stdout
+
+    - name: Disable SSH password authentication
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PasswordAuthentication'
+        line: 'PasswordAuthentication no'
+      notify: Restart SSH
+
+    - name: Disable SSH root login
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PermitRootLogin'
+        line: 'PermitRootLogin no'
+      notify: Restart SSH
+       
+  handlers:
+    - name: Restart SSH
+      service:
+        name: ssh
+        state: restarted

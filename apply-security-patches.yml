@@ -1,0 +1,23 @@
+- hosts: all
+  become: true
+  tasks:
+    - name: Ensure unattended-upgrades is installed
+      apt:
+        name: unattended-upgrades
+        state: present
+
+    - name: Apply security updates using unattended-upgrades
+      command: unattended-upgrade -d --dry-run
+      register: dry_run_output
+      changed_when: "'Packages that will be upgraded' in dry_run_output.stdout"
+      notify: Run unattended-upgrade for real
+
+    - name: Display what will be upgraded (dry run)
+      debug:
+        var: dry_run_output.stdout_lines
+
+  handlers:
+    - name: Run unattended-upgrade for real
+      command: unattended-upgrade
+
+
